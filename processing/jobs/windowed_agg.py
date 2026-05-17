@@ -36,6 +36,8 @@ def rolling_7day_revenue(daily: DataFrame) -> DataFrame:
         .rangeBetween(-6, 0)
     )
     return daily.withColumn("rolling_7d_revenue", F.sum("revenue").over(window))
+
+
 def run(spark: SparkSession, year: int):
     input_path = f"{CURATED_ZONE}/silver/trips_with_zones/year={year}"
     hourly_output = f"{CURATED_ZONE}/gold/hourly_stats/year={year}"
