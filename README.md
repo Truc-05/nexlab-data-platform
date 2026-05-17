@@ -65,8 +65,9 @@ Airflow DAG `end_to_end_pipeline` orchestrates every step with retry policy (2 r
 ### 1. Clone
 
 ```bash
-git clone https://github.com/<your-username>/nexlab-de-internship.git
-cd nexlab-de-internship
+git clone https://github.com/Truc-05/nexlab-data-platform.git
+
+cd nexlab-data-internship
 ```
 
 ### 2. Configure environment
