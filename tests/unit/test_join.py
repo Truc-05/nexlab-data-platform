@@ -1,6 +1,5 @@
 import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from processing.jobs.join_tables import join_zones
 
 @pytest.fixture(scope="module")

@@ -1,6 +1,6 @@
 import pytest
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, IntegerType, TimestampType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from datetime import datetime
 from processing.jobs.cleansing import cast_columns, apply_business_rules, add_derived_columns
 

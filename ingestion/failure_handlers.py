@@ -1,4 +1,3 @@
-import os
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from observability.logger import get_logger

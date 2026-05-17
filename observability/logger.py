@@ -1,6 +1,5 @@
 import logging
 import json
-import time
 from typing import Any
 
 class StructuredFormatter(logging.Formatter):

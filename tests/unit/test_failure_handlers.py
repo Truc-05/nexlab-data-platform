@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, DoubleType, TimestampType, LongType
+from pyspark.sql.types import StructType, StructField, IntegerType, DoubleType, TimestampType
 from ingestion.failure_handlers import drop_duplicates, quarantine_schema_violations, filter_late_arriving_data
 
 @pytest.fixture(scope="module")
