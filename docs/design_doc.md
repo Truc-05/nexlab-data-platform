@@ -332,8 +332,8 @@ Structured JSON logging is enabled for all jobs.
 ## 9.2 Quickstart
 
 ```bash
-git clone <repo-url>
-cd nexlab-de-internship
+git clone https://github.com/Truc-05/nexlab-data-platform.git
+cd nexlab-data-platform
 
 cp .env.example .env
 
