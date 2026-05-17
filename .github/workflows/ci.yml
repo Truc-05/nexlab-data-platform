@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java (required for PySpark)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install ruff black pytest pyspark==3.5.0 pyarrow boto3 requests
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Check formatting with black
+        run: black --check .
+
+      - name: Run unit tests
+        env:
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_ENDPOINT: localhost:9000
+          MINIO_BUCKET: nexlab-lake
+        run: pytest tests/unit/ -v
+
+      - name: Run integration tests
+        env:
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          MINIO_ENDPOINT: localhost:9000
+          MINIO_BUCKET: nexlab-lake
+        run: pytest tests/integration/ -v
+
+      - name: Build Docker image
+        run: docker compose -f infra/docker-compose.yml build dashboard

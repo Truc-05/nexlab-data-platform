@@ -1,0 +1,9 @@
+pyspark
+pyarrow
+boto3
+botocore
+requests
+great-expectations
+pytest
+ruff
+black
