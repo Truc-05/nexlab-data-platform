@@ -73,7 +73,7 @@ def run(spark: SparkSession, year: int, month: int):
         df = apply_business_rules(df)
         df = add_derived_columns(df)
 
-        df.write.mode("overwrite").partitionBy("year", "month").parquet(output_path)
+        df.write.mode("overwrite").parquet(output_path)
 
         clean_count = df.count()
         record_metric("cleansing_records_in", raw_count, year=year, month=month)
