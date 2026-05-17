@@ -14,6 +14,7 @@ st.set_page_config(page_title="NYC TLC Trip Analytics", layout="wide")
 CURATED_ZONE_BUCKET = os.environ.get("MINIO_BUCKET", "nexlab-lake")
 MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "localhost:9000")
 
+
 @st.cache_resource
 def get_s3():
     return boto3.client(
@@ -24,6 +25,7 @@ def get_s3():
         config=Config(signature_version="s3v4"),
         region_name="us-east-1",
     )
+
 
 def read_parquet_from_s3(prefix: str) -> pd.DataFrame:
     s3 = get_s3()
@@ -44,17 +46,21 @@ def read_parquet_from_s3(prefix: str) -> pd.DataFrame:
         return pd.DataFrame()
     return pd.concat(frames, ignore_index=True)
 
+
 @st.cache_data(ttl=300)
 def load_daily_stats() -> pd.DataFrame:
     return read_parquet_from_s3("curated/gold/daily_stats/")
+
 
 @st.cache_data(ttl=300)
 def load_hourly_stats() -> pd.DataFrame:
     return read_parquet_from_s3("curated/gold/hourly_stats/")
 
+
 @st.cache_data(ttl=300)
 def load_fact_trips() -> pd.DataFrame:
     return read_parquet_from_s3("curated/gold/fact_trips/")
+
 
 def render_q1_revenue_over_time(daily: pd.DataFrame):
     st.subheader("Q1: How does daily revenue trend over time by borough?")
@@ -64,10 +70,13 @@ def render_q1_revenue_over_time(daily: pd.DataFrame):
 
     filtered = daily[daily["pickup_borough"].isin(selected)].copy()
     filtered["pickup_date"] = pd.to_datetime(filtered["pickup_date"])
-    pivot = filtered.pivot_table(index="pickup_date", columns="pickup_borough", values="revenue", aggfunc="sum")
+    pivot = filtered.pivot_table(
+        index="pickup_date", columns="pickup_borough", values="revenue", aggfunc="sum"
+    )
 
     st.line_chart(pivot)
     logger.info("q1_rendered", boroughs=selected)
+
 
 def render_q2_peak_hours(hourly: pd.DataFrame):
     st.subheader("Q2: Which hours have the most trips, and how does it vary by borough?")
@@ -81,6 +90,7 @@ def render_q2_peak_hours(hourly: pd.DataFrame):
 
     st.bar_chart(agg.set_index("pickup_hour")["trip_count"])
     logger.info("q2_rendered", borough=selected_borough)
+
 
 def render_q3_avg_fare_by_distance(fact: pd.DataFrame):
     st.subheader("Q3: What is the relationship between trip distance and average fare?")
@@ -97,6 +107,7 @@ def render_q3_avg_fare_by_distance(fact: pd.DataFrame):
 
     st.bar_chart(agg.set_index("distance_bucket")["fare_amount"])
     logger.info("q3_rendered")
+
 
 def main():
     st.title("NYC TLC Trip Analytics")
@@ -126,6 +137,7 @@ def main():
             render_q3_avg_fare_by_distance(fact)
         else:
             st.info("Run the pipeline first to generate data.")
+
 
 if __name__ == "__main__":
     main()

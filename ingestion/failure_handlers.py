@@ -16,12 +16,14 @@ REQUIRED_COLUMNS = {
     "total_amount",
 }
 
+
 def drop_duplicates(df: DataFrame, dedup_keys: list[str]) -> DataFrame:
     before = df.count()
     df = df.dropDuplicates(dedup_keys)
     after = df.count()
     logger.info("dedup", removed=before - after, remaining=after)
     return df
+
 
 def quarantine_schema_violations(df: DataFrame) -> tuple[DataFrame, DataFrame]:
     missing = REQUIRED_COLUMNS - set(df.columns)
@@ -43,6 +45,7 @@ def quarantine_schema_violations(df: DataFrame) -> tuple[DataFrame, DataFrame]:
 
     return good, bad
 
+
 def filter_late_arriving_data(df: DataFrame, year: int, month: int) -> DataFrame:
     from calendar import monthrange
 
@@ -50,9 +53,8 @@ def filter_late_arriving_data(df: DataFrame, year: int, month: int) -> DataFrame
     period_start = f"{year}-{month:02d}-01"
     period_end = f"{year}-{month:02d}-{last_day}"
 
-    late_condition = (
-        (F.col("tpep_pickup_datetime") < period_start)
-        | (F.col("tpep_pickup_datetime") > period_end)
+    late_condition = (F.col("tpep_pickup_datetime") < period_start) | (
+        F.col("tpep_pickup_datetime") > period_end
     )
 
     late_count = df.filter(late_condition).count()

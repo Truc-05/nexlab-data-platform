@@ -2,6 +2,7 @@ import logging
 import json
 from typing import Any
 
+
 class StructuredFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload = {
@@ -14,8 +15,10 @@ class StructuredFormatter(logging.Formatter):
             payload.update(record.extra)
         return json.dumps(payload)
 
+
 def get_logger(name: str) -> "StructuredLogger":
     return StructuredLogger(name)
+
 
 class StructuredLogger:
     def __init__(self, name: str):
@@ -27,9 +30,7 @@ class StructuredLogger:
             self._logger.setLevel(logging.INFO)
 
     def _log(self, level: int, event: str, **kwargs: Any):
-        record = self._logger.makeRecord(
-            self._logger.name, level, "", 0, event, (), None
-        )
+        record = self._logger.makeRecord(self._logger.name, level, "", 0, event, (), None)
         record.extra = kwargs
         self._logger.handle(record)
 

@@ -11,6 +11,7 @@ CURATED_ZONE = os.environ.get("CURATED_ZONE", "s3a://nexlab-lake/curated")
 GRAIN = "one row per completed trip"
 PRIMARY_KEY = "trip_id (VendorID + tpep_pickup_datetime + PULocationID)"
 
+
 def build_fact_trips(spark: SparkSession, year: int) -> DataFrame:
     trips = spark.read.parquet(f"{CURATED_ZONE}/silver/trips_with_zones/year={year}")
 
@@ -31,17 +32,21 @@ def build_fact_trips(spark: SparkSession, year: int) -> DataFrame:
     )
 
     fact = (
-        trips
-        .join(pickup_sk, on="PULocationID", how="left")
+        trips.join(pickup_sk, on="PULocationID", how="left")
         .join(dropoff_sk, on="DOLocationID", how="left")
         .join(date_sk, on="pickup_date", how="left")
-        .withColumn("trip_id", F.sha2(
-            F.concat_ws("|",
-                F.col("VendorID").cast("string"),
-                F.col("tpep_pickup_datetime").cast("string"),
-                F.col("PULocationID").cast("string"),
-            ), 256
-        ))
+        .withColumn(
+            "trip_id",
+            F.sha2(
+                F.concat_ws(
+                    "|",
+                    F.col("VendorID").cast("string"),
+                    F.col("tpep_pickup_datetime").cast("string"),
+                    F.col("PULocationID").cast("string"),
+                ),
+                256,
+            ),
+        )
         .select(
             "trip_id",
             "pickup_date_sk",
@@ -65,6 +70,7 @@ def build_fact_trips(spark: SparkSession, year: int) -> DataFrame:
 
     return fact
 
+
 def run(spark: SparkSession, year: int):
     output_path = f"{CURATED_ZONE}/gold/fact_trips/year={year}"
 
@@ -78,6 +84,7 @@ def run(spark: SparkSession, year: int):
 
 if __name__ == "__main__":
     from processing.utils.spark_session import create_spark_session
+
     year = int(os.environ.get("NYC_TLC_YEAR", 2023))
     spark = create_spark_session("fact_tables")
     run(spark, year)

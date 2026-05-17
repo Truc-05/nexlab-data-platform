@@ -9,11 +9,11 @@ logger = get_logger(__name__)
 RAW_ZONE = os.environ.get("RAW_ZONE", "s3a://nexlab-lake/raw")
 CURATED_ZONE = os.environ.get("CURATED_ZONE", "s3a://nexlab-lake/curated")
 
+
 def load_taxi_zones(spark: SparkSession) -> DataFrame:
     path = f"{RAW_ZONE}/taxi_zones/taxi_zone_lookup.csv"
     return (
-        spark.read
-        .option("header", "true")
+        spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(path)
         .withColumnRenamed("LocationID", "location_id")
@@ -21,6 +21,7 @@ def load_taxi_zones(spark: SparkSession) -> DataFrame:
         .withColumnRenamed("Zone", "zone")
         .withColumnRenamed("service_zone", "service_zone")
     )
+
 
 def join_zones(trips: DataFrame, zones: DataFrame) -> DataFrame:
     pickup_zones = zones.select(
@@ -35,11 +36,10 @@ def join_zones(trips: DataFrame, zones: DataFrame) -> DataFrame:
         F.col("zone").alias("dropoff_zone"),
     )
 
-    return (
-        trips
-        .join(pickup_zones, on="PULocationID", how="left")
-        .join(dropoff_zones, on="DOLocationID", how="left")
+    return trips.join(pickup_zones, on="PULocationID", how="left").join(
+        dropoff_zones, on="DOLocationID", how="left"
     )
+
 
 def run(spark: SparkSession, year: int, months: list[int]):
     silver_path = f"{CURATED_ZONE}/silver/yellow_tripdata"
@@ -62,6 +62,7 @@ def run(spark: SparkSession, year: int, months: list[int]):
 
 if __name__ == "__main__":
     from processing.utils.spark_session import create_spark_session
+
     year = int(os.environ.get("NYC_TLC_YEAR", 2023))
     months = [int(m) for m in os.environ.get("NYC_TLC_MONTHS", "1,2,3").split(",")]
     spark = create_spark_session("join_tables")

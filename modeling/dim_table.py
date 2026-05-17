@@ -8,17 +8,16 @@ logger = get_logger(__name__)
 RAW_ZONE = os.environ.get("RAW_ZONE", "s3a://nexlab-lake/raw")
 CURATED_ZONE = os.environ.get("CURATED_ZONE", "s3a://nexlab-lake/curated")
 
+
 def build_dim_location(spark: SparkSession) -> DataFrame:
     zones = (
-        spark.read
-        .option("header", "true")
+        spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(f"{RAW_ZONE}/taxi_zones/taxi_zone_lookup.csv")
     )
 
     return (
-        zones
-        .withColumnRenamed("LocationID", "location_id")
+        zones.withColumnRenamed("LocationID", "location_id")
         .withColumnRenamed("Borough", "borough")
         .withColumnRenamed("Zone", "zone")
         .withColumnRenamed("service_zone", "service_zone")
@@ -26,21 +25,26 @@ def build_dim_location(spark: SparkSession) -> DataFrame:
         .select("location_sk", "location_id", "borough", "zone", "service_zone")
     )
 
+
 def build_dim_date(spark: SparkSession, start: str, end: str) -> DataFrame:
-    date_range = spark.sql(f"SELECT sequence(to_date('{start}'), to_date('{end}'), interval 1 day) AS date_array")
+    date_range = spark.sql(
+        f"SELECT sequence(to_date('{start}'), to_date('{end}'), interval 1 day) AS date_array"
+    )
     dates = date_range.select(F.explode("date_array").alias("full_date"))
 
     return (
-        dates
-        .withColumn("date_sk", F.date_format("full_date", "yyyyMMdd").cast("int"))
+        dates.withColumn("date_sk", F.date_format("full_date", "yyyyMMdd").cast("int"))
         .withColumn("year", F.year("full_date"))
         .withColumn("month", F.month("full_date"))
         .withColumn("day", F.dayofmonth("full_date"))
         .withColumn("day_of_week", F.dayofweek("full_date"))
         .withColumn("week_of_year", F.weekofyear("full_date"))
-        .withColumn("is_weekend", F.when(F.dayofweek("full_date").isin([1, 7]), True).otherwise(False))
+        .withColumn(
+            "is_weekend", F.when(F.dayofweek("full_date").isin([1, 7]), True).otherwise(False)
+        )
         .withColumn("quarter", F.quarter("full_date"))
     )
+
 
 def run(spark: SparkSession, year: int):
     dim_location = build_dim_location(spark)
@@ -54,6 +58,7 @@ def run(spark: SparkSession, year: int):
 
 if __name__ == "__main__":
     from processing.utils.spark_session import create_spark_session
+
     year = int(os.environ.get("NYC_TLC_YEAR", 2023))
     spark = create_spark_session("dim_tables")
     run(spark, year)

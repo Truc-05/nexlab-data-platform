@@ -9,38 +9,35 @@ logger = get_logger(__name__)
 
 CURATED_ZONE = os.environ.get("CURATED_ZONE", "s3a://nexlab-lake/curated")
 
+
 def hourly_aggregation(df: DataFrame) -> DataFrame:
-    return (
-        df.groupBy("pickup_date", "pickup_hour", "pickup_borough")
-        .agg(
-            F.count("*").alias("trip_count"),
-            F.sum("fare_amount").alias("total_fare"),
-            F.avg("fare_amount").alias("avg_fare"),
-            F.avg("trip_distance").alias("avg_distance"),
-            F.avg("trip_duration_minutes").alias("avg_duration_minutes"),
-            F.sum("tip_amount").alias("total_tips"),
-        )
+    return df.groupBy("pickup_date", "pickup_hour", "pickup_borough").agg(
+        F.count("*").alias("trip_count"),
+        F.sum("fare_amount").alias("total_fare"),
+        F.avg("fare_amount").alias("avg_fare"),
+        F.avg("trip_distance").alias("avg_distance"),
+        F.avg("trip_duration_minutes").alias("avg_duration_minutes"),
+        F.sum("tip_amount").alias("total_tips"),
     )
 
+
 def daily_aggregation(df: DataFrame) -> DataFrame:
-    return (
-        df.groupBy("pickup_date", "pickup_borough")
-        .agg(
-            F.count("*").alias("trip_count"),
-            F.sum("total_amount").alias("revenue"),
-            F.avg("trip_distance").alias("avg_distance"),
-            F.countDistinct("PULocationID").alias("unique_pickup_zones"),
-        )
+    return df.groupBy("pickup_date", "pickup_borough").agg(
+        F.count("*").alias("trip_count"),
+        F.sum("total_amount").alias("revenue"),
+        F.avg("trip_distance").alias("avg_distance"),
+        F.countDistinct("PULocationID").alias("unique_pickup_zones"),
     )
+
 
 def rolling_7day_revenue(daily: DataFrame) -> DataFrame:
     window = (
-        Window
-        .partitionBy("pickup_borough")
+        Window.partitionBy("pickup_borough")
         .orderBy(F.col("pickup_date").cast("long"))
         .rangeBetween(-6 * 86400, 0)
     )
     return daily.withColumn("rolling_7d_revenue", F.sum("revenue").over(window))
+
 
 def run(spark: SparkSession, year: int):
     input_path = f"{CURATED_ZONE}/silver/trips_with_zones/year={year}"
@@ -66,6 +63,7 @@ def run(spark: SparkSession, year: int):
 
 if __name__ == "__main__":
     from processing.utils.spark_session import create_spark_session
+
     year = int(os.environ.get("NYC_TLC_YEAR", 2023))
     spark = create_spark_session("windowed_agg")
     run(spark, year)
